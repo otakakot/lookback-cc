@@ -40,7 +40,7 @@ Generates a daily report from lookback session summaries.
 Arguments:
   date    Target date in YYYY-MM-DD format (default: today)
 
-Input:  ~/.claude/debrief/<date>/*.md
+Input:  ~/.claude/debrief/<YYYY>/<MM>/<DD>/*.md
 Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 `)
 	}
@@ -62,7 +62,9 @@ Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 		os.Exit(1)
 	}
 
-	dayDir := filepath.Join(home, ".claude", "debrief", date)
+	dateParts := strings.SplitN(date, "-", 3)
+
+	dayDir := filepath.Join(home, ".claude", "debrief", dateParts[0], dateParts[1], dateParts[2])
 
 	entries, err := filepath.Glob(filepath.Join(dayDir, "*.md"))
 	if err != nil {
@@ -109,15 +111,13 @@ Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 
 	cmd.Stderr = &stderrBuf
 
-	parts := strings.SplitN(date, "-", 3)
-
-	outDir := filepath.Join(home, ".claude", "report", parts[0], parts[1])
+	outDir := filepath.Join(home, ".claude", "report", dateParts[0], dateParts[1])
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "report: mkdir: %v\n", err)
 		os.Exit(1)
 	}
 
-	outFile := filepath.Join(outDir, parts[2]+".md")
+	outFile := filepath.Join(outDir, dateParts[2]+".md")
 
 	stop := make(chan struct{})
 	done := make(chan struct{})
