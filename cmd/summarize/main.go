@@ -13,6 +13,7 @@ func main() {
 	outFile := os.Getenv("SUMMARIZE_OUT")
 	prompt := os.Getenv("SUMMARIZE_PROMPT")
 	cwd := os.Getenv("SUMMARIZE_CWD")
+	sessionID := os.Getenv("SUMMARIZE_SESSION_ID")
 
 	if tmpFile == "" || outFile == "" || prompt == "" {
 		fmt.Fprintln(os.Stderr, "summarize: missing required environment variables")
@@ -22,11 +23,13 @@ func main() {
 	// Ensure temp file cleanup on signals.
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+
 	go func() {
 		<-sigCh
 		os.Remove(tmpFile)
 		os.Exit(1)
 	}()
+
 	defer os.Remove(tmpFile)
 
 	in, err := os.Open(tmpFile)
@@ -44,6 +47,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "summarize: claude: %v\n", err)
 		os.Exit(1)
 	}
+
 	if len(out) == 0 {
 		fmt.Fprintln(os.Stderr, "summarize: claude returned empty output")
 		return
@@ -57,6 +61,11 @@ func main() {
 	defer f.Close()
 
 	fmt.Fprintf(f, "# 作業ディレクトリ: %s\n\n", cwd)
+
+	if sessionID != "" {
+		fmt.Fprintf(f, "**Session ID**: %s\n\n", sessionID)
+	}
+
 	if _, err := f.Write(out); err != nil {
 		fmt.Fprintf(os.Stderr, "summarize: write output: %v\n", err)
 		os.Exit(1)

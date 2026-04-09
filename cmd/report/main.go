@@ -41,7 +41,7 @@ Arguments:
   date    Target date in YYYY-MM-DD format (default: today)
 
 Input:  ~/.claude/debrief/<date>/*.md
-Output: ~/.claude/report/<date>.md
+Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 `)
 	}
 
@@ -99,13 +99,19 @@ Output: ~/.claude/report/<date>.md
 
 	cmd.Stderr = &stderrBuf
 
-	outDir := filepath.Join(os.Getenv("HOME"), ".claude", "report")
+	parts := strings.SplitN(date, "-", 3)
+	if len(parts) != 3 {
+		fmt.Fprintf(os.Stderr, "report: invalid date format: %s (expected YYYY-MM-DD)\n", date)
+		os.Exit(1)
+	}
+
+	outDir := filepath.Join(os.Getenv("HOME"), ".claude", "report", parts[0], parts[1])
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "report: mkdir: %v\n", err)
 		os.Exit(1)
 	}
 
-	outFile := filepath.Join(outDir, date+".md")
+	outFile := filepath.Join(outDir, parts[2]+".md")
 
 	stop := make(chan struct{})
 	done := make(chan struct{})
@@ -114,10 +120,12 @@ Output: ~/.claude/report/<date>.md
 		defer close(done)
 
 		frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 
 		i := 0
+
 		for {
 			select {
 			case <-stop:

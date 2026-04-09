@@ -25,6 +25,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Error: cannot determine home directory: %v\n", err)
 			os.Exit(1)
 		}
+
 		settingsPath = home + "/.claude/settings.json"
 	}
 
@@ -34,6 +35,7 @@ func main() {
 			fmt.Println("found")
 			os.Exit(0)
 		}
+
 		fmt.Println("not_found")
 		os.Exit(1)
 	case "install":
@@ -62,6 +64,7 @@ func (m *orderedMap) get(key string) (any, bool) {
 			return e.value, true
 		}
 	}
+
 	return nil, false
 }
 
@@ -72,6 +75,7 @@ func (m *orderedMap) set(key string, value any) {
 			return
 		}
 	}
+
 	m.entries = append(m.entries, entry{key, value})
 }
 
@@ -95,27 +99,32 @@ func (m *orderedMap) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+
 	if tok != json.Delim('{') {
 		return fmt.Errorf("expected '{', got %v", tok)
 	}
 
 	m.entries = nil
+
 	for dec.More() {
 		keyTok, err := dec.Token()
 		if err != nil {
 			return err
 		}
+
 		key := keyTok.(string)
 
 		val, err := decodeValue(dec)
 		if err != nil {
 			return err
 		}
+
 		m.entries = append(m.entries, entry{key, val})
 	}
 
 	// consume closing '}'
 	_, err = dec.Token()
+
 	return err
 }
 
@@ -130,35 +139,42 @@ func decodeValue(dec *json.Decoder) (any, error) {
 		switch t {
 		case '{':
 			obj := &orderedMap{}
+
 			for dec.More() {
 				keyTok, err := dec.Token()
 				if err != nil {
 					return nil, err
 				}
+
 				val, err := decodeValue(dec)
 				if err != nil {
 					return nil, err
 				}
+
 				obj.entries = append(obj.entries, entry{keyTok.(string), val})
 			}
 			// consume closing '}'
 			if _, err := dec.Token(); err != nil {
 				return nil, err
 			}
+
 			return obj, nil
 		case '[':
 			var arr []any
+
 			for dec.More() {
 				val, err := decodeValue(dec)
 				if err != nil {
 					return nil, err
 				}
+
 				arr = append(arr, val)
 			}
 			// consume closing ']'
 			if _, err := dec.Token(); err != nil {
 				return nil, err
 			}
+
 			return arr, nil
 		}
 	default:
@@ -171,23 +187,30 @@ func decodeValue(dec *json.Decoder) (any, error) {
 func (m *orderedMap) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteByte('{')
+
 	for i, e := range m.entries {
 		if i > 0 {
 			buf.WriteByte(',')
 		}
+
 		key, err := json.Marshal(e.key)
 		if err != nil {
 			return nil, err
 		}
+
 		buf.Write(key)
 		buf.WriteByte(':')
+
 		val, err := json.Marshal(e.value)
 		if err != nil {
 			return nil, err
 		}
+
 		buf.Write(val)
 	}
+
 	buf.WriteByte('}')
+
 	return buf.Bytes(), nil
 }
 
@@ -197,6 +220,7 @@ func loadSettings(path string) (*orderedMap, error) {
 		if os.IsNotExist(err) {
 			return &orderedMap{}, nil
 		}
+
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 
@@ -218,6 +242,7 @@ func saveSettings(path string, data *orderedMap) error {
 	if err := json.Indent(&buf, compact, "", "  "); err != nil {
 		return fmt.Errorf("indent: %w", err)
 	}
+
 	buf.WriteByte('\n')
 
 	return os.WriteFile(path, buf.Bytes(), 0644)
@@ -228,7 +253,9 @@ func hasHook(path, binary string) bool {
 	if err != nil {
 		return false
 	}
+
 	keyword := hookKeyword(binary)
+
 	for _, rule := range getSessionEndRules(data) {
 		for _, h := range ruleHooks(rule) {
 			if cmd, ok := hookCommand(h); ok && strings.Contains(cmd, keyword) {
@@ -236,6 +263,7 @@ func hasHook(path, binary string) bool {
 			}
 		}
 	}
+
 	return false
 }
 
@@ -247,6 +275,7 @@ func install(path, binary string) int {
 	}
 
 	keyword := hookKeyword(binary)
+
 	for _, rule := range getSessionEndRules(data) {
 		for _, h := range ruleHooks(rule) {
 			if cmd, ok := hookCommand(h); ok && strings.Contains(cmd, keyword) {
@@ -276,6 +305,7 @@ func install(path, binary string) int {
 	}
 
 	fmt.Println("installed")
+
 	return 0
 }
 
@@ -287,6 +317,7 @@ func uninstall(path, binary string) int {
 	}
 
 	keyword := hookKeyword(binary)
+
 	rules := getSessionEndRules(data)
 	if len(rules) == 0 {
 		fmt.Println("not_found")
@@ -294,14 +325,17 @@ func uninstall(path, binary string) int {
 	}
 
 	var filtered []any
+
 	for _, rule := range rules {
 		match := false
+
 		for _, h := range ruleHooks(rule) {
 			if cmd, ok := hookCommand(h); ok && strings.Contains(cmd, keyword) {
 				match = true
 				break
 			}
 		}
+
 		if !match {
 			filtered = append(filtered, rule)
 		}
@@ -313,6 +347,7 @@ func uninstall(path, binary string) int {
 	} else {
 		hooks.delete("SessionEnd")
 	}
+
 	if hooks.len() == 0 {
 		data.delete("hooks")
 	}
@@ -323,6 +358,7 @@ func uninstall(path, binary string) int {
 	}
 
 	fmt.Println("uninstalled")
+
 	return 0
 }
 
@@ -337,8 +373,10 @@ func ensureHooks(data *orderedMap) *orderedMap {
 			return hooks
 		}
 	}
+
 	hooks := &orderedMap{}
 	data.set("hooks", hooks)
+
 	return hooks
 }
 
@@ -347,18 +385,22 @@ func getSessionEndRules(data *orderedMap) []any {
 	if !ok {
 		return nil
 	}
+
 	hooks, ok := v.(*orderedMap)
 	if !ok {
 		return nil
 	}
+
 	v, ok = hooks.get("SessionEnd")
 	if !ok {
 		return nil
 	}
+
 	rules, ok := v.([]any)
 	if !ok {
 		return nil
 	}
+
 	return rules
 }
 
@@ -367,14 +409,17 @@ func ruleHooks(rule any) []any {
 	if !ok {
 		return nil
 	}
+
 	v, ok := m.get("hooks")
 	if !ok {
 		return nil
 	}
+
 	hs, ok := v.([]any)
 	if !ok {
 		return nil
 	}
+
 	return hs
 }
 
@@ -383,11 +428,14 @@ func hookCommand(h any) (string, bool) {
 	if !ok {
 		return "", false
 	}
+
 	v, ok := m.get("command")
 	if !ok {
 		return "", false
 	}
+
 	cmd, ok := v.(string)
+
 	return cmd, ok
 }
 

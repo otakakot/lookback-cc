@@ -89,13 +89,13 @@ func main() {
 	prompt := fmt.Sprintf(promptTemplate, input.Cwd)
 
 	// Spawn summarize in background to run claude and write the summary.
-	spawnCccall(conversationText, outFile, prompt, input.Cwd)
+	spawnSummarize(conversationText, outFile, prompt, input.Cwd, input.SessionID)
 }
 
-// spawnCccall writes conversation text to a temp file and launches the summarize
+// spawnSummarize writes conversation text to a temp file and launches the summarize
 // command in the background. summarize handles running claude, writing the output
 // file, and cleaning up the temp file. The parent returns immediately.
-func spawnCccall(conversation, outFile, prompt, cwd string) {
+func spawnSummarize(conversation, outFile, prompt, cwd, sessionID string) {
 	tmpFile, err := os.CreateTemp("", "debrief-*.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "debrief: tmpfile: %v\n", err)
@@ -108,17 +108,20 @@ func spawnCccall(conversation, outFile, prompt, cwd string) {
 		fmt.Fprintf(os.Stderr, "debrief: write tmp: %v\n", err)
 		os.Exit(1)
 	}
+
 	tmpFile.Close()
 
 	cmd := exec.Command("summarize")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true, // detach from parent session
 	}
+
 	cmd.Env = append(os.Environ(),
 		"SUMMARIZE_PROMPT="+prompt,
 		"SUMMARIZE_TMP="+tmpFile.Name(),
 		"SUMMARIZE_OUT="+outFile,
 		"SUMMARIZE_CWD="+cwd,
+		"SUMMARIZE_SESSION_ID="+sessionID,
 	)
 	cmd.Stdin = nil
 	cmd.Stdout = nil
