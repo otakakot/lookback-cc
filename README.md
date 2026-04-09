@@ -42,28 +42,27 @@ report 2026-04-07
 report --help
 ```
 
-`~/.claude/debrief/<日付>/` 配下の全 `.md` ファイルを統合し、`~/.claude/report/<日付>.md` に保存します。既にファイルがある場合は上書きされます。
+`~/.claude/debrief/<日付>/` 配下の全 `.md` ファイルを統合し、`~/.claude/report/<YYYY>/<MM>/<DD>.md` に保存します。既にファイルがある場合は上書きされます。
 
 ## インストール
 
 ```bash
-bash script/install.sh
+go install github.com/otakakot/lookback-cc@latest
+lookback-cc install
 ```
 
 以下が行われます:
 
-- `cmd/debrief` を `go build` し、`~/.claude/hooks/debrief` に配置
+- `cmd/debrief` を `~/.claude/hooks/debrief` に配置
 - `~/.claude/debrief/` ディレクトリを作成
-- `~/.claude/settings.json` をバックアップ（`settings.json.bak.<タイムスタンプ>`）
-- `~/.claude/settings.json` に `SessionEnd` hook を登録
-- `cmd/settings` を `go install` し、`$GOPATH/bin/settings` に配置
-- `cmd/summarize` を `go install` し、`$GOPATH/bin/summarize` に配置
-- `cmd/report` を `go install` し、`$GOPATH/bin/report` に配置
+- `cmd/summarize` を `$GOPATH/bin/summarize` に配置
+- `cmd/report` を `$GOPATH/bin/report` に配置
+- `~/.claude/settings.json` をバックアップし、`SessionEnd` hook を登録
 
 ## アンインストール
 
 ```bash
-bash script/uninstall.sh
+lookback-cc uninstall
 ```
 
 以下が行われます:
@@ -72,7 +71,6 @@ bash script/uninstall.sh
 - `~/.claude/settings.json` をバックアップし、SessionEnd hook のエントリを削除
 - `$GOPATH/bin/summarize` を削除
 - `$GOPATH/bin/report` を削除
-- `$GOPATH/bin/settings` を削除
 
 生成済みの要約（`~/.claude/debrief/`）とレポート（`~/.claude/report/`）は保持されます。
 
@@ -85,27 +83,26 @@ bash script/uninstall.sh
 │       ├── 10-30-00.md
 │       └── 14-15-30.md
 └── report/                # デイリーレポート（手動生成）
-    └── 2026-04-08.md
+    └── 2026/
+        └── 04/
+            └── 08.md
 ```
 
 ## プロジェクト構成
 
 ```
-lookback/
+lookback-cc/
 ├── cmd/
 │   ├── debrief/
 │   │   └── main.go       # SessionEnd hook エントリポイント
-│   ├── settings/
-│   │   └── main.go       # settings.json 操作ツール
 │   ├── summarize/
 │   │   └── main.go       # バックグラウンド要約生成
 │   └── report/
 │       └── main.go       # デイリーレポート生成
 ├── internal/
+│   ├── cli/              # install / uninstall ロジック
 │   └── transcript/       # 会話履歴のパース・整形
-├── script/
-│   ├── install.sh        # インストールスクリプト
-│   └── uninstall.sh      # アンインストールスクリプト
+├── main.go               # lookback-cc コマンドのエントリポイント
 ├── go.mod
 └── README.md
 ```
