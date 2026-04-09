@@ -40,7 +40,7 @@ func saveSettings(path string, data *orderedMap) error {
 
 	buf.WriteByte('\n')
 
-	return os.WriteFile(path, buf.Bytes(), 0644)
+	return os.WriteFile(path, buf.Bytes(), 0o644)
 }
 
 func settingsInstall(path, binary string) (string, error) {
@@ -117,7 +117,7 @@ func settingsUninstall(path, binary string) (string, error) {
 		hooks.delete("SessionEnd")
 	}
 
-	if hooks.length() == 0 {
+	if hooks.len() == 0 {
 		data.delete("hooks")
 	}
 

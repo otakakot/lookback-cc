@@ -15,7 +15,7 @@ func main() {
 	cwd := os.Getenv("SUMMARIZE_CWD")
 	sessionID := os.Getenv("SUMMARIZE_SESSION_ID")
 
-	if tmpFile == "" || outFile == "" || prompt == "" {
+	if tmpFile == "" || outFile == "" || prompt == "" || cwd == "" {
 		fmt.Fprintln(os.Stderr, "summarize: missing required environment variables")
 		os.Exit(1)
 	}

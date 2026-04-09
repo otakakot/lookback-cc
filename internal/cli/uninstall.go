@@ -33,9 +33,11 @@ func RunUninstall() int {
 	fmt.Println()
 	fmt.Println("==> Removing SessionEnd hook from settings...")
 
-	if _, err := backupSettings(settingsPath); err != nil {
+	if backup, err := backupSettings(settingsPath); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: backup: %v\n", err)
 		return 1
+	} else if backup != "" {
+		fmt.Printf("    Backup: %s\n", backup)
 	}
 
 	result, err := settingsUninstall(settingsPath, debriefBinary)

@@ -95,9 +95,11 @@ func RunInstall() int {
 	fmt.Println()
 	fmt.Println("==> Configuring SessionEnd hook...")
 
-	if _, err := backupSettings(settingsPath); err != nil {
+	if backup, err := backupSettings(settingsPath); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: backup: %v\n", err)
 		return 1
+	} else if backup != "" {
+		fmt.Printf("    Backup: %s\n", backup)
 	}
 
 	result, err := settingsInstall(settingsPath, debriefBinary)
@@ -172,5 +174,5 @@ func backupSettings(settingsPath string) (string, error) {
 		return "", err
 	}
 
-	return backup, os.WriteFile(backup, data, 0o644)
+	return backup, os.WriteFile(backup, data, 0o600)
 }

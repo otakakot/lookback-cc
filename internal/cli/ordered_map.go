@@ -46,7 +46,7 @@ func (m *orderedMap) delete(key string) {
 	}
 }
 
-func (m *orderedMap) length() int {
+func (m *orderedMap) len() int {
 	return len(m.entries)
 }
 

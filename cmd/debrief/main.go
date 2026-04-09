@@ -56,9 +56,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	home := os.Getenv("HOME")
-	if home == "" {
-		fmt.Fprintln(os.Stderr, "debrief: HOME is not set")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "debrief: home dir: %v\n", err)
 		os.Exit(1)
 	}
 
