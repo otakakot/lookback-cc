@@ -4,79 +4,59 @@ set -euo pipefail
 HOOKS_DIR="$HOME/.claude/hooks"
 SETTINGS="$HOME/.claude/settings.json"
 BINARY="$HOOKS_DIR/debrief"
+GOBIN="$(go env GOPATH)/bin"
 
-echo "==> Removing debrief hook binary..."
+echo "==> Removing debrief hook..."
 if [ -f "$BINARY" ]; then
   rm "$BINARY"
   echo "    Removed: $BINARY"
 else
-  echo "    Not found, skipping."
+  echo "    Skipped: not found"
 fi
 
 echo ""
 echo "==> Removing SessionEnd hook from settings..."
-if [ -f "$SETTINGS" ] && python3 -c "
-import json, sys
-with open(sys.argv[1]) as f:
-    cfg = json.load(f)
-hooks = cfg.get('hooks', {}).get('SessionEnd', [])
-for rule in hooks:
-    for h in rule.get('hooks', []):
-        if 'debrief' in h.get('command', ''):
-            sys.exit(0)
-sys.exit(1)
-" "$SETTINGS" 2>/dev/null; then
+if [ -f "$SETTINGS" ]; then
   BACKUP="${SETTINGS}.bak.$(date +%Y%m%d%H%M%S)"
   cp "$SETTINGS" "$BACKUP"
   echo "    Backup: $BACKUP"
-  python3 -c "
-import json, sys
-
-path = sys.argv[1]
-
-with open(path) as f:
-    cfg = json.load(f)
-
-session_end = cfg.get('hooks', {}).get('SessionEnd', [])
-cfg['hooks']['SessionEnd'] = [
-    rule for rule in session_end
-    if not any('debrief' in h.get('command', '') for h in rule.get('hooks', []))
-]
-
-if not cfg['hooks']['SessionEnd']:
-    del cfg['hooks']['SessionEnd']
-if not cfg.get('hooks'):
-    del cfg['hooks']
-
-with open(path, 'w') as f:
-    json.dump(cfg, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-" "$SETTINGS"
-  echo "    Removed debrief hook from: $SETTINGS"
-else
-  echo "    No debrief hook found, skipping."
 fi
+RESULT=$(settings uninstall "$BINARY")
+case "$RESULT" in
+  not_found)
+    echo "    Skipped: not found" ;;
+  uninstalled)
+    echo "    Removed: debrief hook from $SETTINGS" ;;
+  *)
+    echo "    Error: unexpected result: $RESULT" >&2; exit 1 ;;
+esac
 
 echo ""
-echo "==> Removing cccall command..."
-CCCALL="$(go env GOPATH)/bin/cccall"
-if [ -f "$CCCALL" ]; then
-  rm "$CCCALL"
-  echo "    Removed: $CCCALL"
+echo "==> Removing summarize command..."
+if [ -f "$GOBIN/summarize" ]; then
+  rm "$GOBIN/summarize"
+  echo "    Removed: $GOBIN/summarize"
 else
-  echo "    Not found, skipping."
+  echo "    Skipped: not found"
 fi
 
 echo ""
 echo "==> Removing report command..."
-REPORT="$(go env GOPATH)/bin/report"
-if [ -f "$REPORT" ]; then
-  rm "$REPORT"
-  echo "    Removed: $REPORT"
+if [ -f "$GOBIN/report" ]; then
+  rm "$GOBIN/report"
+  echo "    Removed: $GOBIN/report"
 else
-  echo "    Not found, skipping."
+  echo "    Skipped: not found"
 fi
 
 echo ""
-echo "Done!"
-echo "Note: debrief summaries in ~/.claude/debrief/ and reports in ~/.claude/report/ are preserved."
+echo "==> Removing settings command..."
+if [ -f "$GOBIN/settings" ]; then
+  rm "$GOBIN/settings"
+  echo "    Removed: $GOBIN/settings"
+else
+  echo "    Skipped: not found"
+fi
+
+echo ""
+echo "Done! Summaries in ~/.claude/debrief/ and reports in ~/.claude/report/ are preserved."

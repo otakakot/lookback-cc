@@ -9,13 +9,13 @@ import (
 )
 
 func main() {
-	tmpFile := os.Getenv("CCCALL_TMP")
-	outFile := os.Getenv("CCCALL_OUT")
-	prompt := os.Getenv("CCCALL_PROMPT")
-	cwd := os.Getenv("CCCALL_CWD")
+	tmpFile := os.Getenv("SUMMARIZE_TMP")
+	outFile := os.Getenv("SUMMARIZE_OUT")
+	prompt := os.Getenv("SUMMARIZE_PROMPT")
+	cwd := os.Getenv("SUMMARIZE_CWD")
 
 	if tmpFile == "" || outFile == "" || prompt == "" {
-		fmt.Fprintln(os.Stderr, "cccall: missing required environment variables")
+		fmt.Fprintln(os.Stderr, "summarize: missing required environment variables")
 		os.Exit(1)
 	}
 
@@ -31,7 +31,7 @@ func main() {
 
 	in, err := os.Open(tmpFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cccall: open tmp: %v\n", err)
+		fmt.Fprintf(os.Stderr, "summarize: open tmp: %v\n", err)
 		os.Exit(1)
 	}
 	defer in.Close()
@@ -41,24 +41,24 @@ func main() {
 
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cccall: claude: %v\n", err)
+		fmt.Fprintf(os.Stderr, "summarize: claude: %v\n", err)
 		os.Exit(1)
 	}
 	if len(out) == 0 {
-		fmt.Fprintln(os.Stderr, "cccall: claude returned empty output")
+		fmt.Fprintln(os.Stderr, "summarize: claude returned empty output")
 		return
 	}
 
 	f, err := os.Create(outFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cccall: create output: %v\n", err)
+		fmt.Fprintf(os.Stderr, "summarize: create output: %v\n", err)
 		os.Exit(1)
 	}
 	defer f.Close()
 
 	fmt.Fprintf(f, "# 作業ディレクトリ: %s\n\n", cwd)
 	if _, err := f.Write(out); err != nil {
-		fmt.Fprintf(os.Stderr, "cccall: write output: %v\n", err)
+		fmt.Fprintf(os.Stderr, "summarize: write output: %v\n", err)
 		os.Exit(1)
 	}
 }
