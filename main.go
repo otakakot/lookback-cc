@@ -19,6 +19,8 @@ func main() {
 		os.Exit(cli.RunInstall())
 	case "uninstall":
 		os.Exit(cli.RunUninstall())
+	case "local":
+		os.Exit(cli.RunLocal())
 	case "version", "--version", "-v":
 		fmt.Println("lookback-cc", version.Version)
 	default:
@@ -33,6 +35,7 @@ func printUsage() {
 Commands:
   install      Install debrief, summarize, and report commands
   uninstall    Remove installed commands and hooks
+  local        Install from local source (for development)
   version      Show version information
 `)
 }

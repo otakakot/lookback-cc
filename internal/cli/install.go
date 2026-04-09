@@ -12,7 +12,40 @@ import (
 	"github.com/otakakot/lookback-cc/internal/version"
 )
 
+type installer interface {
+	label() string
+	version() string
+	install(cmd, gobin string) error
+}
+
+type remoteInstaller struct {
+	modPath string
+	modVer  string
+}
+
+func (r *remoteInstaller) label() string {
+	return fmt.Sprintf("module: %s@%s", r.modPath, r.modVer)
+}
+
+func (r *remoteInstaller) version() string {
+	return r.modVer
+}
+
+func (r *remoteInstaller) install(cmd, gobin string) error {
+	return goInstall(r.modPath+"/cmd/"+cmd, r.modVer, gobin)
+}
+
 func RunInstall() int {
+	modPath, modVer := moduleInfo()
+	if modPath == "" {
+		fmt.Fprintln(os.Stderr, "Error: could not determine module info")
+		return 1
+	}
+
+	return runInstall(&remoteInstaller{modPath: modPath, modVer: modVer}, false)
+}
+
+func runInstall(inst installer, local bool) int {
 	fmt.Println("==> Checking prerequisites...")
 
 	for _, cmd := range []string{"go", "claude"} {
@@ -25,13 +58,7 @@ func RunInstall() int {
 		fmt.Printf("    %s: %s\n", cmd, path)
 	}
 
-	modPath, modVer := moduleInfo()
-	if modPath == "" {
-		fmt.Fprintln(os.Stderr, "    Error: could not determine module info")
-		return 1
-	}
-
-	fmt.Printf("    module: %s@%s\n", modPath, modVer)
+	fmt.Printf("    %s\n", inst.label())
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -44,16 +71,23 @@ func RunInstall() int {
 	debriefBinary := filepath.Join(gobin, "debrief")
 	outputDir := filepath.Join(home, ".claude", "debrief")
 
-	// Install debrief command.
-	fmt.Println()
-	fmt.Println("==> Installing debrief command...")
-
-	if err := goInstall(modPath+"/cmd/debrief", modVer, ""); err != nil {
-		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
-		return 1
+	suffix := ""
+	if local {
+		suffix = " (local)"
 	}
 
-	fmt.Printf("    Installed: %s\n", debriefBinary)
+	// Install commands.
+	for _, name := range []string{"debrief", "summarize", "report"} {
+		fmt.Println()
+		fmt.Printf("==> Installing %s command%s...\n", name, suffix)
+
+		if err := inst.install(name, ""); err != nil {
+			fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
+			return 1
+		}
+
+		fmt.Printf("    Installed: %s\n", filepath.Join(gobin, name))
+	}
 
 	// Create output directory.
 	fmt.Println()
@@ -65,28 +99,6 @@ func RunInstall() int {
 	}
 
 	fmt.Printf("    Created: %s\n", outputDir)
-
-	// Install summarize command.
-	fmt.Println()
-	fmt.Println("==> Installing summarize command...")
-
-	if err := goInstall(modPath+"/cmd/summarize", modVer, ""); err != nil {
-		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
-		return 1
-	}
-
-	fmt.Printf("    Installed: %s\n", filepath.Join(gobin, "summarize"))
-
-	// Install report command.
-	fmt.Println()
-	fmt.Println("==> Installing report command...")
-
-	if err := goInstall(modPath+"/cmd/report", modVer, ""); err != nil {
-		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
-		return 1
-	}
-
-	fmt.Printf("    Installed: %s\n", filepath.Join(gobin, "report"))
 
 	// Configure SessionEnd hook.
 	fmt.Println()
@@ -116,21 +128,25 @@ func RunInstall() int {
 	fmt.Println()
 	fmt.Println("==> Verifying installed versions...")
 
-	for _, cmd := range []struct{ name, path string }{
-		{"debrief", filepath.Join(gobin, "debrief")},
-		{"summarize", filepath.Join(gobin, "summarize")},
-		{"report", filepath.Join(gobin, "report")},
-	} {
-		out, err := exec.Command(cmd.path, "--version").Output()
+	for _, name := range []string{"debrief", "summarize", "report"} {
+		cmdPath := filepath.Join(gobin, name)
+
+		out, err := exec.Command(cmdPath, "--version").Output()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "    %s: failed to get version: %v\n", cmd.name, err)
+			fmt.Fprintf(os.Stderr, "    %s: failed to get version: %v\n", name, err)
 		} else {
 			fmt.Printf("    %s\n", strings.TrimSpace(string(out)))
 		}
 	}
 
 	fmt.Println()
-	fmt.Printf("lookback-cc %s installed successfully!\n", version.Version)
+
+	if local {
+		fmt.Printf("lookback-cc %s installed successfully (from local source)!\n", inst.version())
+	} else {
+		fmt.Printf("lookback-cc %s installed successfully!\n", inst.version())
+	}
+
 	fmt.Printf("Summaries will be saved to: %s\n", outputDir)
 
 	return 0
