@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/otakakot/lookback-cc/internal/transcript"
+	"github.com/otakakot/lookback-cc/internal/version"
 )
 
 const promptTemplate = `以下はClaude Codeのセッション中の会話履歴です。この会話を振り返り、以下の形式でマークダウンの要約を生成してください。
@@ -40,6 +41,11 @@ type HookInput struct {
 }
 
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Println("debrief", version.Version)
+		return
+	}
+
 	var input HookInput
 	if err := json.NewDecoder(os.Stdin).Decode(&input); err != nil {
 		fmt.Fprintf(os.Stderr, "debrief: failed to read hook input: %v\n", err)

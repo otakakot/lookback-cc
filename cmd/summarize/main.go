@@ -6,9 +6,16 @@ import (
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/otakakot/lookback-cc/internal/version"
 )
 
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Println("summarize", version.Version)
+		return
+	}
+
 	tmpFile := os.Getenv("SUMMARIZE_TMP")
 	outFile := os.Getenv("SUMMARIZE_OUT")
 	prompt := os.Getenv("SUMMARIZE_PROMPT")

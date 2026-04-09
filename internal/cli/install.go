@@ -8,6 +8,8 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/otakakot/lookback-cc/internal/version"
 )
 
 func RunInstall() int {
@@ -23,13 +25,13 @@ func RunInstall() int {
 		fmt.Printf("    %s: %s\n", cmd, path)
 	}
 
-	modPath, version := moduleInfo()
+	modPath, modVer := moduleInfo()
 	if modPath == "" {
 		fmt.Fprintln(os.Stderr, "    Error: could not determine module info")
 		return 1
 	}
 
-	fmt.Printf("    module: %s@%s\n", modPath, version)
+	fmt.Printf("    module: %s@%s\n", modPath, modVer)
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -51,7 +53,7 @@ func RunInstall() int {
 		return 1
 	}
 
-	if err := goInstall(modPath+"/cmd/debrief", version, hooksDir); err != nil {
+	if err := goInstall(modPath+"/cmd/debrief", modVer, hooksDir); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
 		return 1
 	}
@@ -73,7 +75,7 @@ func RunInstall() int {
 	fmt.Println()
 	fmt.Println("==> Installing summarize command...")
 
-	if err := goInstall(modPath+"/cmd/summarize", version, ""); err != nil {
+	if err := goInstall(modPath+"/cmd/summarize", modVer, ""); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
 		return 1
 	}
@@ -84,7 +86,7 @@ func RunInstall() int {
 	fmt.Println()
 	fmt.Println("==> Installing report command...")
 
-	if err := goInstall(modPath+"/cmd/report", version, ""); err != nil {
+	if err := goInstall(modPath+"/cmd/report", modVer, ""); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
 		return 1
 	}
@@ -116,7 +118,8 @@ func RunInstall() int {
 	}
 
 	fmt.Println()
-	fmt.Printf("Done! Summaries will be saved to: %s\n", outputDir)
+	fmt.Printf("lookback-cc %s installed successfully!\n", version.Version)
+	fmt.Printf("Summaries will be saved to: %s\n", outputDir)
 
 	return 0
 }

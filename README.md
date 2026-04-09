@@ -88,6 +88,46 @@ lookback-cc uninstall
             └── 08.md
 ```
 
+## バージョン管理
+
+バージョンは `internal/version/version.go` の定数と git tag の両方で管理します。
+
+### バージョン確認
+
+```bash
+# メインコマンド
+lookback-cc version
+
+# サブコマンド
+report --version
+debrief --version
+summarize --version
+```
+
+### バージョン更新手順
+
+1. `internal/version/version.go` の `Version` 定数を更新する
+
+```go
+const Version = "v0.1.0"
+```
+
+2. 変更をコミットする
+
+```bash
+git add internal/version/version.go
+git commit -m "bump version to v0.1.0"
+```
+
+3. git tag を作成してプッシュする
+
+```bash
+git tag v0.1.0
+git push origin main --tags
+```
+
+**注意**: `version.go` の定数と git tag は必ず同じ値にしてください。
+
 ## プロジェクト構成
 
 ```
@@ -101,7 +141,8 @@ lookback-cc/
 │       └── main.go       # デイリーレポート生成
 ├── internal/
 │   ├── cli/              # install / uninstall ロジック
-│   └── transcript/       # 会話履歴のパース・整形
+│   ├── transcript/       # 会話履歴のパース・整形
+│   └── version/          # バージョン定数
 ├── main.go               # lookback-cc コマンドのエントリポイント
 ├── go.mod
 └── README.md

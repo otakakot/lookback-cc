@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/otakakot/lookback-cc/internal/cli"
+	"github.com/otakakot/lookback-cc/internal/version"
 )
 
 func main() {
@@ -18,6 +19,8 @@ func main() {
 		os.Exit(cli.RunInstall())
 	case "uninstall":
 		os.Exit(cli.RunUninstall())
+	case "version", "--version", "-v":
+		fmt.Println("lookback-cc", version.Version)
 	default:
 		printUsage()
 		os.Exit(1)
@@ -30,5 +33,6 @@ func printUsage() {
 Commands:
   install      Install debrief hook, summarize, and report commands
   uninstall    Remove installed hooks and commands
+  version      Show version information
 `)
 }
