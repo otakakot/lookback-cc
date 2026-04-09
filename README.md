@@ -47,30 +47,27 @@ report --help
 ## インストール
 
 ```bash
-go install github.com/otakakot/lookback-cc@latest
-lookback-cc install
+go run github.com/otakakot/lookback-cc@latest install
 ```
 
 以下が行われます:
 
-- `cmd/debrief` を `~/.claude/hooks/debrief` に配置
-- `~/.claude/debrief/` ディレクトリを作成
-- `cmd/summarize` を `$GOPATH/bin/summarize` に配置
-- `cmd/report` を `$GOPATH/bin/report` に配置
-- `~/.claude/settings.json` をバックアップし、`SessionEnd` hook を登録
+1. `go` と `claude` CLI の存在を確認
+2. `debrief`、`summarize`、`report` コマンドを `$GOPATH/bin/` に配置
+3. `~/.claude/debrief/` ディレクトリを作成
+4. `~/.claude/settings.json` をバックアップし、`SessionEnd` hook を登録
+5. インストールした各コマンドのバージョンを確認・表示
 
 ## アンインストール
 
 ```bash
-lookback-cc uninstall
+go run github.com/otakakot/lookback-cc@latest uninstall
 ```
 
 以下が行われます:
 
-- `~/.claude/hooks/debrief` を削除
-- `~/.claude/settings.json` をバックアップし、SessionEnd hook のエントリを削除
-- `$GOPATH/bin/summarize` を削除
-- `$GOPATH/bin/report` を削除
+1. `$GOPATH/bin/` から `debrief`、`summarize`、`report` を削除
+2. `~/.claude/settings.json` をバックアップし、`SessionEnd` hook のエントリを削除
 
 生成済みの要約（`~/.claude/debrief/`）とレポート（`~/.claude/report/`）は保持されます。
 
@@ -79,9 +76,11 @@ lookback-cc uninstall
 ```
 ~/.claude/
 ├── debrief/               # セッション単位の要約（自動生成）
-│   └── 2026-04-08/
-│       ├── 10-30-00.md
-│       └── 14-15-30.md
+│   └── 2026/
+│       └── 04/
+│           └── 08/
+│               ├── 10-30-00.md
+│               └── 14-15-30.md
 └── report/                # デイリーレポート（手動生成）
     └── 2026/
         └── 04/
@@ -95,13 +94,13 @@ lookback-cc uninstall
 ### バージョン確認
 
 ```bash
-# メインコマンド
-lookback-cc version
-
-# サブコマンド
-report --version
+# インストール済みコマンド
 debrief --version
 summarize --version
+report --version
+
+# go run 経由
+go run github.com/otakakot/lookback-cc@latest version
 ```
 
 ### バージョン更新手順

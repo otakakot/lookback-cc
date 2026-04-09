@@ -14,11 +14,11 @@ func RunUninstall() int {
 	}
 
 	settingsPath := filepath.Join(home, ".claude", "settings.json")
-	debriefBinary := filepath.Join(home, ".claude", "hooks", "debrief")
 	gobin := goBinDir()
+	debriefBinary := filepath.Join(gobin, "debrief")
 
-	// Remove debrief hook.
-	fmt.Println("==> Removing debrief hook...")
+	// Remove debrief command.
+	fmt.Println("==> Removing debrief command...")
 
 	if removed, err := removeIfExists(debriefBinary); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)

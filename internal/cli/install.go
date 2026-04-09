@@ -39,21 +39,16 @@ func RunInstall() int {
 		return 1
 	}
 
-	hooksDir := filepath.Join(home, ".claude", "hooks")
+	gobin := goBinDir()
 	settingsPath := filepath.Join(home, ".claude", "settings.json")
-	debriefBinary := filepath.Join(hooksDir, "debrief")
+	debriefBinary := filepath.Join(gobin, "debrief")
 	outputDir := filepath.Join(home, ".claude", "debrief")
 
-	// Install debrief hook.
+	// Install debrief command.
 	fmt.Println()
-	fmt.Println("==> Installing debrief hook...")
+	fmt.Println("==> Installing debrief command...")
 
-	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
-		fmt.Fprintf(os.Stderr, "    Error: mkdir: %v\n", err)
-		return 1
-	}
-
-	if err := goInstall(modPath+"/cmd/debrief", modVer, hooksDir); err != nil {
+	if err := goInstall(modPath+"/cmd/debrief", modVer, ""); err != nil {
 		fmt.Fprintf(os.Stderr, "    Error: %v\n", err)
 		return 1
 	}
@@ -80,7 +75,7 @@ func RunInstall() int {
 		return 1
 	}
 
-	fmt.Printf("    Installed: %s\n", filepath.Join(goBinDir(), "summarize"))
+	fmt.Printf("    Installed: %s\n", filepath.Join(gobin, "summarize"))
 
 	// Install report command.
 	fmt.Println()
@@ -91,7 +86,7 @@ func RunInstall() int {
 		return 1
 	}
 
-	fmt.Printf("    Installed: %s\n", filepath.Join(goBinDir(), "report"))
+	fmt.Printf("    Installed: %s\n", filepath.Join(gobin, "report"))
 
 	// Configure SessionEnd hook.
 	fmt.Println()
@@ -117,6 +112,23 @@ func RunInstall() int {
 		fmt.Printf("    Configured: %s\n", settingsPath)
 	}
 
+	// Verify installed versions.
+	fmt.Println()
+	fmt.Println("==> Verifying installed versions...")
+
+	for _, cmd := range []struct{ name, path string }{
+		{"debrief", filepath.Join(gobin, "debrief")},
+		{"summarize", filepath.Join(gobin, "summarize")},
+		{"report", filepath.Join(gobin, "report")},
+	} {
+		out, err := exec.Command(cmd.path, "--version").Output()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "    %s: failed to get version: %v\n", cmd.name, err)
+		} else {
+			fmt.Printf("    %s\n", strings.TrimSpace(string(out)))
+		}
+	}
+
 	fmt.Println()
 	fmt.Printf("lookback-cc %s installed successfully!\n", version.Version)
 	fmt.Printf("Summaries will be saved to: %s\n", outputDir)
@@ -130,12 +142,7 @@ func moduleInfo() (string, string) {
 		return "", ""
 	}
 
-	version := bi.Main.Version
-	if version == "(devel)" {
-		version = "latest"
-	}
-
-	return bi.Main.Path, version
+	return bi.Main.Path, version.Version
 }
 
 func goInstall(pkg, version, gobin string) error {

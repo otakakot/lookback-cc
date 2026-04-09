@@ -31,8 +31,8 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, `Usage: lookback-cc <command>
 
 Commands:
-  install      Install debrief hook, summarize, and report commands
-  uninstall    Remove installed hooks and commands
+  install      Install debrief, summarize, and report commands
+  uninstall    Remove installed commands and hooks
   version      Show version information
 `)
 }
