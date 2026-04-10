@@ -84,7 +84,7 @@ func main() {
 	// Prepare output directory and file.
 	now := time.Now()
 
-	outDir := filepath.Join(home, ".claude", "debrief", now.Format("2006"), now.Format("01"), now.Format("02"))
+	outDir := filepath.Join(home, ".claude", "lookback", "debrief", now.Format("2006"), now.Format("01"), now.Format("02"))
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "debrief: mkdir: %v\n", err)
 		os.Exit(1)

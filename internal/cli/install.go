@@ -69,7 +69,7 @@ func runInstall(inst installer, local bool) int {
 	gobin := goBinDir()
 	settingsPath := filepath.Join(home, ".claude", "settings.json")
 	debriefBinary := filepath.Join(gobin, "debrief")
-	outputDir := filepath.Join(home, ".claude", "debrief")
+	outputDir := filepath.Join(home, ".claude", "lookback", "debrief")
 
 	suffix := ""
 	if local {

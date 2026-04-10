@@ -84,7 +84,7 @@ func RunUninstall() int {
 	}
 
 	fmt.Println()
-	fmt.Println("Done! Summaries in ~/.claude/debrief/ and reports in ~/.claude/report/ are preserved.")
+	fmt.Println("Done! Summaries in ~/.claude/lookback/debrief/ and reports in ~/.claude/lookback/report/ are preserved.")
 
 	return 0
 }

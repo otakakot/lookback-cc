@@ -47,8 +47,8 @@ Generates a daily report from lookback session summaries.
 Arguments:
   date    Target date in YYYY-MM-DD format (default: today)
 
-Input:  ~/.claude/debrief/<YYYY>/<MM>/<DD>/*.md
-Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
+Input:  ~/.claude/lookback/debrief/<YYYY>/<MM>/<DD>/*.md
+Output: ~/.claude/lookback/report/<YYYY>/<MM>/<DD>.md
 `)
 	}
 
@@ -71,7 +71,7 @@ Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 
 	dateParts := strings.SplitN(date, "-", 3)
 
-	dayDir := filepath.Join(home, ".claude", "debrief", dateParts[0], dateParts[1], dateParts[2])
+	dayDir := filepath.Join(home, ".claude", "lookback", "debrief", dateParts[0], dateParts[1], dateParts[2])
 
 	entries, err := filepath.Glob(filepath.Join(dayDir, "*.md"))
 	if err != nil {
@@ -118,7 +118,7 @@ Output: ~/.claude/report/<YYYY>/<MM>/<DD>.md
 
 	cmd.Stderr = &stderrBuf
 
-	outDir := filepath.Join(home, ".claude", "report", dateParts[0], dateParts[1])
+	outDir := filepath.Join(home, ".claude", "lookback", "report", dateParts[0], dateParts[1])
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "report: mkdir: %v\n", err)
 		os.Exit(1)
